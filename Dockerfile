@@ -1,15 +1,25 @@
-FROM node:16-slim AS builder
+# Stage 1: Build
+FROM node:20-alpine AS builder
+
 WORKDIR /app
+
 COPY package*.json ./
-RUN npm install
+RUN npm ci
+
 COPY . .
 RUN npm run build
 
 # Stage 2: Production
-FROM builder AS final
+FROM node:20-alpine AS production
+
 WORKDIR /app
-COPY --from=builder /app/build ./build
+ENV NODE_ENV=production
+
 COPY package*.json ./
-RUN npm install --production
+RUN npm ci --omit=dev && npm cache clean --force
+
+COPY --from=builder /app/build ./build
+
 EXPOSE 3000
+
 CMD ["npm", "start"]
