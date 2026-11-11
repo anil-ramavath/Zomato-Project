@@ -10,14 +10,17 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Production
-FROM node:20-alpine AS production
+FROM node:20-alpine
 
 WORKDIR /app
+
 ENV NODE_ENV=production
 
 COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm ci
 
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/src ./src
 COPY --from=builder /app/build ./build
 
 EXPOSE 3000
